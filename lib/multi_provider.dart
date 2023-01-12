@@ -1,6 +1,9 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:state_management/saldo_shared_state.dart';
+import 'package:state_management/theme_provider.dart';
 
 import 'color_state.dart';
 import 'keranjang_shared_state.dart';
@@ -10,9 +13,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: MultiProviderExample(),
+    return ChangeNotifierProvider(
+      create: (context) => ThemeProvider(),
+      builder: (context, child) {
+        final provider = Provider.of<ThemeProvider>(context);
+        return MaterialApp(
+          theme: provider.theme,
+          debugShowCheckedModeBanner: false,
+          home: const MultiProviderExample(),
+        );
+      },
     );
   }
 }
@@ -29,15 +39,13 @@ class _MultiProviderExampleState extends State<MultiProviderExample> {
       const TextStyle(color: Colors.white, fontWeight: FontWeight.w500);
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<ThemeProvider>(context);
+
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (context) => ColorState(),
-        ),
+        ChangeNotifierProvider(create: (context) => ColorState()),
         ChangeNotifierProvider(create: (context) => SaldoState()),
-        ChangeNotifierProvider(
-          create: (context) => KeranjangState(),
-        )
+        ChangeNotifierProvider(create: (context) => KeranjangState()),
       ],
       child: Scaffold(
         appBar: AppBar(
@@ -54,7 +62,37 @@ class _MultiProviderExampleState extends State<MultiProviderExample> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text("Belanja"),
+              const Text("Change Theme"),
+              const SizedBox(
+                height: 10,
+              ),
+              Consumer<ColorState>(
+                builder: (context, colorstate, child) => Container(
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      color: colorstate.getColors),
+                  child: IconButton(
+                    onPressed: () {
+                      provider.toogleTheme();
+                    },
+                    icon: const Icon(Icons.palette_outlined),
+                    // child: const Text("Change Theme"),
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 30,
+              ),
+              Divider(
+                color: Colors.grey,
+                thickness: 1,
+              ),
+              const Text(
+                "Belanja",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(
                 height: 10,
               ),
@@ -75,7 +113,17 @@ class _MultiProviderExampleState extends State<MultiProviderExample> {
                         ),
                       )),
               const SizedBox(
-                height: 10,
+                height: 20,
+              ),
+              Divider(
+                color: Colors.grey,
+                thickness: 1,
+              ),
+              Text(
+                "Change Color Item",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -93,6 +141,19 @@ class _MultiProviderExampleState extends State<MultiProviderExample> {
               ),
               const SizedBox(
                 height: 20,
+              ),
+              Divider(
+                color: Colors.grey,
+                thickness: 1,
+              ),
+              Text(
+                "Keranjang",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(
+                height: 10,
               ),
               Consumer<ColorState>(
                 builder: (context, colorstate, child) =>
@@ -122,37 +183,100 @@ class _MultiProviderExampleState extends State<MultiProviderExample> {
               const SizedBox(
                 height: 20,
               ),
-              // ElevatedButton(onPressed: () {}, child: Text("ss"))
+              Divider(
+                color: Colors.grey,
+                thickness: 1,
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Consumer<SaldoState>(
-                    builder: (context, saldostate, child) =>
-                        ElevatedButton.icon(
-                      onPressed: (() {
-                        if (saldostate.getSaldo == 0) {
-                          saldostate.resetsaldo();
-                        }
-                      }),
-                      icon: const Icon(Icons.change_circle),
-                      label: const Text("Reset Saldo"),
+                  Text(
+                    "Reset Saldo",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   Container(
-                    width: 30,
+                    width: 20,
                   ),
-                  Consumer<KeranjangState>(
-                    builder: (context, saldostate, child) =>
-                        ElevatedButton.icon(
-                      onPressed: (() {
-                        if (saldostate.getQty > 0) {
-                          saldostate.kurangikeranjang();
-                        }
-                      }),
-                      icon: const Icon(Icons.change_circle),
-                      label: const Text("Kurangi Keranjang"),
+                  Text(
+                    "Kurangin Keranjang",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                ],
+              ),
+              SizedBox(
+                height: 10,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Text("Reset Saldo"),
+                  Consumer2<ColorState, SaldoState>(
+                    builder: (context, colorstate, saldostate, child) =>
+                        Container(
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: colorstate.getColors),
+                      child: IconButton(
+                        onPressed: () {
+                          if (saldostate.getSaldo >= 0) {
+                            saldostate.resetsaldo();
+                          }
+                        },
+                        icon: const Icon(Icons.autorenew),
+                      ),
                     ),
                   ),
+
+                  Container(
+                    width: 60,
+                  ),
+                  Consumer2<ColorState, KeranjangState>(
+                    builder: (context, colorstate, saldostate, child) =>
+                        Container(
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: colorstate.getColors),
+                      child: IconButton(
+                        onPressed: () {
+                          if (saldostate.getQty > 0) {
+                            saldostate.kurangikeranjang();
+                          }
+                        },
+                        icon: const Icon(Icons.change_circle_outlined),
+                      ),
+                    ),
+                  ),
+                  // Consumer<SaldoState>(
+                  //   builder: (context, saldostate, child) =>
+                  //       ElevatedButton.icon(
+                  //     onPressed: (() {
+                  //       if (saldostate.getSaldo == 0) {
+                  //         saldostate.resetsaldo();
+                  //       }
+                  //     }),
+                  //     icon: const Icon(Icons.change_circle),
+                  //     label: const Text("Reset Saldo"),
+                  //   ),
+                  // ),
+                  Container(
+                    width: 30,
+                  ),
+                  // Consumer<KeranjangState>(
+                  //   builder: (context, saldostate, child) =>
+                  //       ElevatedButton.icon(
+                  //     onPressed: (() {
+                  //       if (saldostate.getQty > 0) {
+                  //         saldostate.kurangikeranjang();
+                  //       }
+                  //     }),
+                  //     icon: const Icon(Icons.change_circle),
+                  //     label: const Text("Kurangi Keranjang"),
+                  //   ),
+                  // ),
                 ],
               )
             ],
